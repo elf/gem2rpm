@@ -1,0 +1,52 @@
+--- SOURCES/template_gem2rpm.spec.in	2012-02-10 01:13:48.830437000 +0900
++++ SOURCES/template_gem2rpm.spec.in.new	2012-02-10 01:14:19.000000000 +0900
+@@ -1,29 +1,29 @@
+-# Generated from <%= format.gem_path %> by gem2rpm -*- rpm-spec -*-
++# Generated from <%= format.gem_path %> by gem2rpm -*- rpm-spec -*-grep
+ %define rbname <%= spec.name %>
+ %define version <%= spec.version %>
+ %define release 1
+ 
+ Summary: <%= spec.summary %>
+-Name: ruby-gems-%{rbname}
++Name: rubygem-%{rbname}
+ 
+ Version: %{version}
+ Release: %{release}
+ Group: Development/Ruby
+ License: Distributable
+ URL: <%= spec.homepage %>
+-Source0: %{rbname}-%{version}.gem
++Source0:  http://rubygems.org/downloads/%{rbname}-%{version}.gem
+ # Make sure the spec template is included in the SRPM
+-Source1: ruby-gems-%{rbname}.spec.in
++Source1: template_gem2rpm.spec.in
+ BuildRoot: %{_tmppath}/%{name}-%{version}-root
+ Requires: ruby <%= spec.required_ruby_version %>
+-Requires: ruby-gems >= <%= Gem::RubyGemsVersion %>
++Requires: rubygems >= <%= Gem::RubyGemsVersion %>
+ <% for d in spec.dependencies -%>
+ <% for req in d.requirement -%>
+-Requires: ruby-gems-<%= d.name %> <%= req %>
++Requires: rubygem-<%= d.name %> <%= req %>
+ <% end -%>
+ <% end -%>
+ BuildRequires: ruby <%= spec.required_ruby_version %>
+-BuildRequires: ruby-gems >= <%= Gem::RubyGemsVersion %>
++BuildRequires: rubygems >= <%= Gem::RubyGemsVersion %>
+ BuildArch: noarch
+ Provides: ruby(<%= spec.name.capitalize %>) = %{version}
+ 
+@@ -42,6 +42,12 @@
+ %{__rm} -rf %{buildroot}
+ mkdir -p %{gembuilddir}
+ gem install --local --install-dir %{gembuilddir} --force %{SOURCE0}
++
++SRCS=`grep -rl '/usr/local/bin/ruby' %{gembuilddir} 2> /dev/null || echo`
++if [ ! "x" = "x${SRCS}" ]; then
++  echo ${SRCS} | xargs sed -i 's@/usr/local/bin/ruby@/usr/bin/ruby@g'
++fi
++
+ <% if ! spec.executables.empty? -%>
+ mkdir -p %{buildroot}/%{_bindir}
+ mv %{gembuilddir}/bin/* %{buildroot}/%{_bindir}
